@@ -262,18 +262,25 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 
 			// ══════════ NO PREFIX SYSTEM ══════════
 			const noPrefixEnable = global.GoatBot.config.noPrefix?.enable === true;
-			const isAdminBot = (global.GoatBot.config.adminBot || []).includes(senderID);
 
 			let usedPrefix = prefix;
 			let bodyToParse = body;
 
 			if (body.startsWith(prefix)) {
+				// Normal prefixed command: !pair, !help, etc.
 				bodyToParse = body;
 				usedPrefix = prefix;
-			} else if (noPrefixEnable && isAdminBot) {
+			} else if (noPrefixEnable) {
+				// No-prefix mode is available to every user.
+				// It still does NOT bypass command role permissions:
+				// role 0 = everyone, role 1 = group admin, role 2 = bot admin.
 				const possibleCmd = body.trim().split(/ +/)[0].toLowerCase();
-				const cmdExists = GoatBot.commands.has(possibleCmd) || GoatBot.commands.has(GoatBot.aliases.get(possibleCmd));
+				const directCommand = GoatBot.commands.has(possibleCmd);
+				const aliasCommand = GoatBot.aliases.get(possibleCmd);
+				const cmdExists = directCommand || Boolean(aliasCommand && GoatBot.commands.has(aliasCommand));
+
 				if (!cmdExists) return;
+
 				usedPrefix = "";
 				bodyToParse = body;
 			} else {
@@ -286,7 +293,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 			// ————————————  CHECK HAS COMMAND ——————————— //
 			let commandName = args.shift().toLowerCase();
 			let command = GoatBot.commands.get(commandName) || GoatBot.commands.get(GoatBot.aliases.get(commandName));
-			// ———————— CHECK ALIASES SET BY GROUP ———————— //
+			// ———————— CHECK ALIASES SET BY GROUP ——————— //
 			const aliasesData = threadData.data.aliases || {};
 			for (const cmdName in aliasesData) {
 				if (aliasesData[cmdName].includes(commandName)) {
@@ -316,7 +323,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 			// —————  CHECK BANNED OR ONLY ADMIN BOX  ————— //
 			if (isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, commandName, message, langCode))
 				return;
-				if (!command) {
+			if (!command) {
 				if (!hideNotiMessage.commandNotFound && (!commandName || commandName.trim() === ""))
 					return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "prefixOnly", prefix));
 				if (!hideNotiMessage.commandNotFound && commandName) {
@@ -584,7 +591,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 		}
 
 
-		/* 
+		/*
 		 +------------------------------------------------+
 		 |                    ON REPLY                    |
 		 +------------------------------------------------+
@@ -605,7 +612,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 			const command = GoatBot.commands.get(commandName);
 			if (!command) {
 				message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "cannotFindCommand", commandName));
-				return log.err("onReply", `Command "${commandName}" not found`, Reply);
+				return log.err("onReply", `Command "${commandName}" not found`, commandName);
 			}
 
 			// —————————————— CHECK PERMISSION —————————————— //
@@ -667,7 +674,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 			const command = GoatBot.commands.get(commandName);
 			if (!command) {
 				message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "cannotFindCommand", commandName));
-				return log.err("onReaction", `Command "${commandName}" not found`, Reaction);
+				return log.err("onReaction", `Command "${commandName}" not found`, commandName);
 			}
 
 			// —————————————— CHECK PERMISSION —————————————— //
