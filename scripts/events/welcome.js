@@ -10,10 +10,10 @@ A random video will be used for every welcome event.
 */
 
 const WELCOME_VIDEOS = [
-  "YOUR_POSTING_CCR_VIDEO_LINK_1",
-  "YOUR_POSTING_CCR_VIDEO_LINK_2",
-  "YOUR_POSTING_CCR_VIDEO_LINK_3",
-  "YOUR_POSTING_CCR_VIDEO_LINK_4"
+  "https://i.postimg.cc/Gh5MXwYb/welcome.gif",
+  "https://i.postimg.cc/Gh5MXwYb/welcome.gif",
+  "https://i.postimg.cc/Gh5MXwYb/welcome.gif",
+  "https://i.postimg.cc/Gh5MXwYb/welcome.gif"
 ];
 
 /*
